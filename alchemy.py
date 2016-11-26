@@ -39,7 +39,11 @@ class DbWrapper(object):
 
     def connect(self):
         self.Base = automap_base()
-        self.engine = create_engine("redshift+psycopg2://{}:{}@{}:{}/{}".format(self.uname, self.upass, self.dbhost, self.port, self.dbname))
+        self.engine = create_engine("redshift+psycopg2://{}:{}@{}:{}/{}".format(self.uname,
+                                                                                self.upass,
+                                                                                self.dbhost,
+                                                                                self.port,
+                                                                                self.dbname))
         self.conn = self.engine.connect()
         self.session = Session(self.engine)
         self.meta = MetaData()
@@ -106,6 +110,17 @@ if __name__ == '__main__':
     #Arrowhead id is 79
     kc_events = db.session.query(Event, Venue).filter(Event.c.venueid ==79).filter(Event.c.venueid==Venue.c.venueid).all()
     
+    Category = db.tables['category']
+    ## join Event and Category to get event type in result
+    arrowhead_events = db.session.query(Event, Category).join(Category, Event.c.catid==Category.c.catid).filter(Event.c.venueid==79).all()
+
+    ## join Venue, Event and Category
+    db.session.query(Event, Venue, Category).\
+        join(Venue, Event.c.venueid==Venue.c.venueid).\
+        join(Category, Event.c.catid==Category.c.catid).\
+        filter(Event.c.venueid==79).\
+        first()
+
     s = select([Venue])
     result = db.conn.execute(s).fetchall()
     print str(s)
